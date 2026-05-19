@@ -63,6 +63,7 @@
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Hafalan</label>
                         <select id="statusHafalan" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                             <option value="Iqro">Iqro</option>
+                            <option value="Binnadzor">Binnadzor</option>
                             <option value="Ziyadah">Ziyadah</option>
                             <option value="Murojaah 1">Murojaah 1</option>
                             <option value="Murojaah 2">Murojaah 2</option>
