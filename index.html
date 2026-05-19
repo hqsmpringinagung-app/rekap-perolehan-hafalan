@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-50 font-sans min-h-screen text-gray-800">
 
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
         <header class="text-center mb-8 bg-emerald-700 text-white p-6 rounded-2xl shadow-md">
             <h1 class="text-2xl md:text-3xl font-bold tracking-wide">PEROLEHAN HAFALAN SISWA</h1>
             <p class="text-emerald-100 text-sm md:text-base mt-1 font-medium">SMP Hamalatul Quran Ringinagung</p>
@@ -63,12 +63,24 @@
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Hafalan</label>
                         <select id="statusHafalan" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                             <option value="Iqro">Iqro</option>
-                            <option value="Binnadzor">Binnadzor</option>
-                            <option value="Ziyadah">Ziyadah</option>
+                            <option value="Ziyadah" selected>Ziyadah</option>
                             <option value="Murojaah 1">Murojaah 1</option>
                             <option value="Murojaah 2">Murojaah 2</option>
                             <option value="Murojaah 3">Murojaah 3</option>
                             <option value="Dauroh Tasmik">Dauroh Tasmik</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Guru Pengampu / Penyimak</label>
+                        <select id="guru" required class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            <option value="" disabled selected hidden>Pilih nama guru di sini...</option>
+                            <option value="Kholifatus Sholihah al-auliya">Kholifatus Sholihah al-auliya</option>
+                            <option value="Redita Anisya">Redita Anisya</option>
+                            <option value="Anggita May Anggraini">Anggita May Anggraini</option>
+                            <option value="Siti Nur Hasanah">Siti Nur Hasanah</option>
+                            <option value="Ratu Bilqish">Ratu Bilqish</option>
+                            <option value="Hafidhoh Sidqiyah">Hafidhoh Sidqiyah</option>
                         </select>
                     </div>
 
@@ -106,6 +118,7 @@
                                     <th class="py-3 px-4 font-bold text-center">Minggu Ini</th>
                                     <th class="py-3 px-4 font-bold text-center">Total</th>
                                     <th class="py-3 px-4 font-bold text-center">Status</th>
+                                    <th class="py-3 px-4 font-bold">Guru</th>
                                     <th class="py-3 px-4 font-bold text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -122,7 +135,7 @@
     </div>
 
     <script>
-        // Array untuk menyimpan data hafalan (sementara di memory browser)
+        // Array penampung data (Tabel dimulai dari kosong)
         let dataHafalan = [];
 
         const form = document.getElementById('hafalanForm');
@@ -160,6 +173,7 @@
                             <td class="py-3 px-4 text-center">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor}">${item.status}</span>
                             </td>
+                            <td class="py-3 px-4 text-gray-700 font-medium">${item.guru}</td>
                             <td class="py-3 px-4 text-center">
                                 <button onclick="hapusData(${index})" class="text-rose-500 hover:text-rose-700 font-medium text-xs transition cursor-pointer">Hapus</button>
                             </td>
@@ -169,6 +183,9 @@
                 });
             }
         }
+
+        // Jalankan fungsi table pertama kali
+        updateTable();
 
         // Event saat tombol Simpan ditekan
         form.addEventListener('submit', function(e) {
@@ -181,9 +198,10 @@
             const mingguIni = document.getElementById('mingguIni').value;
             const total = document.getElementById('totalPerolehan').value;
             const status = document.getElementById('statusHafalan').value;
+            const guru = document.getElementById('guru').value; // Ambil nama guru dari dropdown
 
             // Masukkan data ke array
-            dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, status });
+            dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, status, guru });
 
             // Refresh tabel & reset form bawaan
             updateTable();
@@ -214,7 +232,7 @@
             }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Format Landscape A4
+            const doc = new jsPDF('l', 'mm', 'a4');
 
             // Judul Dokumen PDF
             doc.setFont("Helvetica", "bold");
@@ -234,7 +252,7 @@
 
             // Garis pembatas
             doc.setLineWidth(0.5);
-            doc.setDrawColor(16, 185, 129); // Warna emerald
+            doc.setDrawColor(16, 185, 129);
             doc.line(15, 29, 282, 29);
 
             // Menyiapkan data untuk tabel PDF
@@ -246,23 +264,25 @@
                 item.akhir,
                 item.mingguIni,
                 item.total,
-                item.status
+                item.status,
+                item.guru
             ]);
 
             // Membuat tabel otomatis di PDF
             doc.autoTable({
                 startY: 34,
-                head: [['No', 'Nama Siswa', 'Kelas', 'Awal Setoran', 'Akhir Setoran', 'Perolehan Minggu Ini', 'Total Seluruhnya', 'Status Hafalan']],
+                head: [['No', 'Nama Siswa', 'Kelas', 'Awal Setoran', 'Akhir Setoran', 'Perolehan Minggu Ini', 'Total Seluruhnya', 'Status Hafalan', 'Guru Pengampu']],
                 body: bodyData,
                 theme: 'striped',
-                headStyles: { fillColor: [16, 124, 65], halign: 'center' }, // Emerald dark
+                headStyles: { fillColor: [16, 124, 65], halign: 'center' },
                 columnStyles: {
                     0: { halign: 'center', cellWidth: 12 },
                     1: { fontStyle: 'bold' },
-                    2: { halign: 'center' },
+                    2: { halign: 'center', cellWidth: 20 },
                     5: { halign: 'center' },
                     6: { halign: 'center', fontStyle: 'bold' },
-                    7: { halign: 'center' }
+                    7: { halign: 'center' },
+                    8: { fontStyle: 'normal' }
                 },
                 styles: { fontSize: 10, cellPadding: 3 }
             });
