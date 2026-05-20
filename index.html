@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perolehan Hafalan Siswa - SMP Hamalatul Quran</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -18,10 +18,12 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-emerald-800 border-b pb-2 flex items-center gap-2">
+                <h2 id="formTitle" class="text-xl font-semibold mb-4 text-emerald-800 border-b pb-2 flex items-center gap-2">
                     <span>📝</span> Input Data Hafalan
                 </h2>
                 <form id="hafalanForm" class="space-y-4">
+                    <input type="hidden" id="editIndex" value="">
+
                     <div class="grid grid-cols-3 gap-3">
                         <div class="col-span-2">
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Siswa</label>
@@ -40,22 +42,22 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Awal Setoran</label>
-                            <input type="text" id="awalSetoran" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: An-Nas 1">
+                            <input type="text" id="awalSetoran" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="juz 2 hlm 5">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Akhir Setoran</label>
-                            <input type="text" id="akhirSetoran" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: Al-Humazah 5">
+                            <input type="text" id="akhirSetoran" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="juz 2 hlm 10">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Minggu Ini</label>
-                            <input type="text" id="mingguIni" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: 1/2 Juz">
+                            <input type="text" id="mingguIni" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="5 halaman">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Total Perolehan</label>
-                            <input type="text" id="totalPerolehan" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: 3 Juz">
+                            <input type="text" id="totalPerolehan" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: 1 Juz 10 hlm">
                         </div>
                     </div>
 
@@ -87,9 +89,9 @@
 
                     <div class="grid grid-cols-2 gap-3 mt-2">
                         <button type="button" id="resetFormBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer">
-                            🔄 Reset Form
+                            🔄 Batal / Reset
                         </button>
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm cursor-pointer">
+                        <button type="submit" id="submitBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm cursor-pointer">
                             💾 Simpan Data
                         </button>
                     </div>
@@ -136,14 +138,25 @@
     </div>
 
     <script>
-        // Array penampung data (Tabel dimulai dari kosong)
-        let dataHafalan = [];
+        // Kunci penyimpanan khusus di browser agar data tidak tertukar
+        const STORAGE_KEY = 'data_hafalan_smp_hq';
+
+        // Ambil data lama dari LocalStorage, jika kosong sediakan array kosong []
+        let dataHafalan = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const form = document.getElementById('hafalanForm');
+        const editIndexInput = document.getElementById('editIndex');
+        const formTitle = document.getElementById('formTitle');
+        const submitBtn = document.getElementById('submitBtn');
         const tabelBody = document.getElementById('tabelBody');
         const emptyState = document.getElementById('emptyState');
         const downloadPdfBtn = document.getElementById('downloadPdfBtn');
         const resetFormBtn = document.getElementById('resetFormBtn');
+
+        // Fungsi menyimpan data ke LocalStorage browser agar permanen saat di-refresh/tutup
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataHafalan));
+        }
 
         // Fungsi memperbarui tampilan tabel
         function updateTable() {
@@ -155,7 +168,6 @@
                 emptyState.classList.add('hidden');
                 
                 dataHafalan.forEach((item, index) => {
-                    // Warna badge dinamis berdasarkan status
                     let statusColor = 'bg-gray-100 text-gray-700';
                     if(item.status === 'Ziyadah') statusColor = 'bg-blue-100 text-blue-700';
                     else if(item.status.includes('Murojaah')) statusColor = 'bg-amber-100 text-amber-700';
@@ -176,7 +188,11 @@
                             </td>
                             <td class="py-3 px-4 text-gray-700 font-medium">${item.guru}</td>
                             <td class="py-3 px-4 text-center">
-                                <button onclick="hapusData(${index})" class="text-rose-500 hover:text-rose-700 font-medium text-xs transition cursor-pointer">Hapus</button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="editData(${index})" class="text-amber-600 hover:text-amber-800 font-semibold text-xs transition cursor-pointer">✏️ Edit</button>
+                                    <span class="text-gray-300">|</span>
+                                    <button onclick="hapusData(${index})" class="text-rose-500 hover:text-rose-700 font-semibold text-xs transition cursor-pointer">❌ Hapus</button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -185,10 +201,10 @@
             }
         }
 
-        // Jalankan fungsi table pertama kali
+        // Jalankan render tabel pertama kali saat aplikasi dibuka
         updateTable();
 
-        // Event saat tombol Simpan ditekan
+        // Event saat tombol Simpan ditekan (Bisa untuk data baru atau update data lama)
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -199,29 +215,70 @@
             const mingguIni = document.getElementById('mingguIni').value;
             const total = document.getElementById('totalPerolehan').value;
             const status = document.getElementById('statusHafalan').value;
-            const guru = document.getElementById('guru').value; // Ambil nama guru dari dropdown
+            const guru = document.getElementById('guru').value;
+            const editIndex = editIndexInput.value;
 
-            // Masukkan data ke array
-            dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, status, guru });
+            if (editIndex !== "") {
+                // JIKA DALAM MODE EDIT: Perbarui data yang sudah ada
+                dataHafalan[editIndex] = { nama, kelas, awal, akhir, mingguIni, total, status, guru };
+                clearEditMode();
+            } else {
+                // JIKA DATA BARU: Masukkan data ke ujung array
+                dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, status, guru });
+            }
 
-            // Refresh tabel & reset form bawaan
-            updateTable();
-            form.reset();
+            saveData();    // Simpan ke memori browser
+            updateTable(); // Perbarui tabel
+            form.reset();  // Kosongkan form kembali
             document.getElementById('nama').focus();
         });
 
-        // Event saat tombol Reset Form ditekan manual
+        // Fungsi mengaktifkan Mode Edit (Menarik data tabel kembali ke dalam form)
+        function editData(index) {
+            const item = dataHafalan[index];
+            
+            document.getElementById('nama').value = item.nama;
+            document.getElementById('kelas').value = item.kelas;
+            document.getElementById('awalSetoran').value = item.awal;
+            document.getElementById('akhirSetoran').value = item.akhir;
+            document.getElementById('mingguIni').value = item.mingguIni;
+            document.getElementById('totalPerolehan').value = item.total;
+            document.getElementById('statusHafalan').value = item.status;
+            document.getElementById('guru').value = item.guru;
+            
+            // Tandai form sedang mengedit indeks ke-X
+            editIndexInput.value = index;
+            formTitle.innerHTML = "<span>✏️</span> Edit Data Hafalan";
+            submitBtn.innerText = "🔄 Perbarui Data";
+            submitBtn.className = "bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm cursor-pointer";
+            
+            document.getElementById('nama').focus();
+        }
+
+        // Fungsi membatalkan mode edit dan mengembalikan form ke setelan normal
+        function clearEditMode() {
+            editIndexInput.value = "";
+            formTitle.innerHTML = "<span>📝</span> Input Data Hafalan";
+            submitBtn.innerText = "💾 Simpan Data";
+            submitBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm cursor-pointer";
+        }
+
+        // Event tombol Batal / Reset manual
         resetFormBtn.addEventListener('click', function() {
-            if(confirm("Apakah Anda yakin ingin mengosongkan form input ini?")) {
-                form.reset();
-            }
+            form.reset();
+            clearEditMode();
         });
 
-        // Fungsi menghapus baris data
+        // Fungsi menghapus baris data permanen
         function hapusData(index) {
-            if(confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+            if(confirm("Apakah Anda yakin ingin menghapus data hafalan ini secara permanen?")) {
                 dataHafalan.splice(index, 1);
+                saveData();
                 updateTable();
+                if(editIndexInput.value == index) {
+                    form.reset();
+                    clearEditMode();
+                }
             }
         }
 
@@ -235,7 +292,6 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
 
-            // Judul Dokumen PDF
             doc.setFont("Helvetica", "bold");
             doc.setFontSize(16);
             doc.text("LAPORAN PEROLEHAN HAFALAN SISWA", 148, 15, { align: "center" });
@@ -244,19 +300,16 @@
             doc.setFont("Helvetica", "normal");
             doc.text("SMP Hamalatul Quran Ringinagung", 148, 21, { align: "center" });
             
-            // Tanggal Otomatis di lembar PDF
             const opsiTanggal = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const tanggalSekarang = new Date().toLocaleDateString('id-ID', opsiTanggal);
             doc.setFontSize(10);
             doc.setFont("Helvetica", "italic");
             doc.text("Dicetak pada: " + tanggalSekarang, 15, 27);
 
-            // Garis pembatas
             doc.setLineWidth(0.5);
             doc.setDrawColor(16, 185, 129);
             doc.line(15, 29, 282, 29);
 
-            // Menyiapkan data untuk tabel PDF
             const bodyData = dataHafalan.map((item, idx) => [
                 idx + 1,
                 item.nama,
@@ -269,7 +322,6 @@
                 item.guru
             ]);
 
-            // Membuat tabel otomatis di PDF
             doc.autoTable({
                 startY: 34,
                 head: [['No', 'Nama Siswa', 'Kelas', 'Awal Setoran', 'Akhir Setoran', 'Perolehan Minggu Ini', 'Total Seluruhnya', 'Status Hafalan', 'Guru Pengampu']],
@@ -288,7 +340,6 @@
                 styles: { fontSize: 10, cellPadding: 3 }
             });
 
-            // Download file PDF hasil generate
             doc.save("Rekap_Hafalan_SMP_HQ_Ringinagung.pdf");
         });
     </script>
