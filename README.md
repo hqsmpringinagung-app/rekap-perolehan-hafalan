@@ -57,16 +57,17 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Total Perolehan</label>
-                            <input type="text" id="totalPerolehan" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Contoh: 1 Juz 10 hlm">
+                            <input type="text" id="totalPerolehan" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="1 Juz 10 hlm">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Hafalan</label>
                         <select id="statusHafalan" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            <option value="Pilih disini" selected>Pilih disini</option>
                             <option value="Iqro">Iqro</option>
                             <option value="Binnadzor">Binnadzor</option>
-                            <option value="Ziyadah" selected>Ziyadah</option>
+                            <option value="Ziyadah">Ziyadah</option>
                             <option value="Murojaah 1">Murojaah 1</option>
                             <option value="Murojaah 2">Murojaah 2</option>
                             <option value="Murojaah 3">Murojaah 3</option>
