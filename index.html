@@ -62,6 +62,11 @@
                     </div>
 
                     <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Terakhir Tasmik</label>
+                        <input type="text" id="terakhirTasmik" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Juz 3 / 5 Juz">
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Hafalan</label>
                         <select id="statusHafalan" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                             <option value="Pilih disini" selected>Pilih disini</option>
@@ -121,13 +126,14 @@
                                     <th class="py-3 px-4 font-bold">Akhir</th>
                                     <th class="py-3 px-4 font-bold text-center">Minggu Ini</th>
                                     <th class="py-3 px-4 font-bold text-center">Total</th>
+                                    <th class="py-3 px-4 font-bold text-center">Tasmik Terakhir</th>
                                     <th class="py-3 px-4 font-bold text-center">Status</th>
                                     <th class="py-3 px-4 font-bold">Guru</th>
                                     <th class="py-3 px-4 font-bold text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelBody" class="divide-y divide-gray-100">
-                                </tbody>
+                            </tbody>
                         </table>
                         <div id="emptyState" class="text-center py-12 text-gray-400 text-sm">
                             Belum ada data setoran hafalan yang disimpan.
@@ -139,10 +145,8 @@
     </div>
 
     <script>
-        // Kunci penyimpanan khusus di browser agar data tidak tertukar
         const STORAGE_KEY = 'data_hafalan_smp_hq';
 
-        // Ambil data lama dari LocalStorage, jika kosong sediakan array kosong []
         let dataHafalan = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const form = document.getElementById('hafalanForm');
@@ -154,12 +158,10 @@
         const downloadPdfBtn = document.getElementById('downloadPdfBtn');
         const resetFormBtn = document.getElementById('resetFormBtn');
 
-        // Fungsi menyimpan data ke LocalStorage browser agar permanen saat di-refresh/tutup
         function saveData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataHafalan));
         }
 
-        // Fungsi memperbarui tampilan tabel
         function updateTable() {
             tabelBody.innerHTML = '';
             
@@ -184,6 +186,7 @@
                             <td class="py-3 px-4 text-gray-600">${item.akhir}</td>
                             <td class="py-3 px-4 text-center font-medium text-emerald-600">${item.mingguIni}</td>
                             <td class="py-3 px-4 text-center font-bold text-gray-800">${item.total}</td>
+                            <td class="py-3 px-4 text-center font-medium text-purple-600">${item.terakhirTasmik || '-'}</td>
                             <td class="py-3 px-4 text-center">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor}">${item.status}</span>
                             </td>
@@ -202,10 +205,8 @@
             }
         }
 
-        // Jalankan render tabel pertama kali saat aplikasi dibuka
         updateTable();
 
-        // Event saat tombol Simpan ditekan (Bisa untuk data baru atau update data lama)
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -215,26 +216,24 @@
             const akhir = document.getElementById('akhirSetoran').value;
             const mingguIni = document.getElementById('mingguIni').value;
             const total = document.getElementById('totalPerolehan').value;
+            const terakhirTasmik = document.getElementById('terakhirTasmik').value;
             const status = document.getElementById('statusHafalan').value;
             const guru = document.getElementById('guru').value;
             const editIndex = editIndexInput.value;
 
             if (editIndex !== "") {
-                // JIKA DALAM MODE EDIT: Perbarui data yang sudah ada
-                dataHafalan[editIndex] = { nama, kelas, awal, akhir, mingguIni, total, status, guru };
+                dataHafalan[editIndex] = { nama, kelas, awal, akhir, mingguIni, total, terakhirTasmik, status, guru };
                 clearEditMode();
             } else {
-                // JIKA DATA BARU: Masukkan data ke ujung array
-                dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, status, guru });
+                dataHafalan.push({ nama, kelas, awal, akhir, mingguIni, total, terakhirTasmik, status, guru });
             }
 
-            saveData();    // Simpan ke memori browser
-            updateTable(); // Perbarui tabel
-            form.reset();  // Kosongkan form kembali
+            saveData();    
+            updateTable(); 
+            form.reset();  
             document.getElementById('nama').focus();
         });
 
-        // Fungsi mengaktifkan Mode Edit (Menarik data tabel kembali ke dalam form)
         function editData(index) {
             const item = dataHafalan[index];
             
@@ -244,10 +243,10 @@
             document.getElementById('akhirSetoran').value = item.akhir;
             document.getElementById('mingguIni').value = item.mingguIni;
             document.getElementById('totalPerolehan').value = item.total;
+            document.getElementById('terakhirTasmik').value = item.terakhirTasmik || '';
             document.getElementById('statusHafalan').value = item.status;
             document.getElementById('guru').value = item.guru;
             
-            // Tandai form sedang mengedit indeks ke-X
             editIndexInput.value = index;
             formTitle.innerHTML = "<span>✏️</span> Edit Data Hafalan";
             submitBtn.innerText = "🔄 Perbarui Data";
@@ -256,7 +255,6 @@
             document.getElementById('nama').focus();
         }
 
-        // Fungsi membatalkan mode edit dan mengembalikan form ke setelan normal
         function clearEditMode() {
             editIndexInput.value = "";
             formTitle.innerHTML = "<span>📝</span> Input Data Hafalan";
@@ -264,13 +262,11 @@
             submitBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition text-sm shadow-sm cursor-pointer";
         }
 
-        // Event tombol Batal / Reset manual
         resetFormBtn.addEventListener('click', function() {
             form.reset();
             clearEditMode();
         });
 
-        // Fungsi menghapus baris data permanen
         function hapusData(index) {
             if(confirm("Apakah Anda yakin ingin menghapus data hafalan ini secara permanen?")) {
                 dataHafalan.splice(index, 1);
@@ -283,7 +279,6 @@
             }
         }
 
-        // Fitur Download PDF menggunakan jsPDF & jsPDF-AutoTable
         downloadPdfBtn.addEventListener('click', function() {
             if(dataHafalan.length === 0) {
                 alert("Tidak ada data untuk didownload!");
@@ -319,26 +314,28 @@
                 item.akhir,
                 item.mingguIni,
                 item.total,
+                item.terakhirTasmik || '-',
                 item.status,
                 item.guru
             ]);
 
             doc.autoTable({
                 startY: 34,
-                head: [['No', 'Nama Siswa', 'Kelas', 'Awal Setoran', 'Akhir Setoran', 'Perolehan Minggu Ini', 'Total Seluruhnya', 'Status Hafalan', 'Guru Pengampu']],
+                head: [['No', 'Nama Siswa', 'Kelas', 'Awal Setoran', 'Akhir Setoran', 'Perolehan Minggu Ini', 'Total Seluruhnya', 'Terakhir Tasmik', 'Status Hafalan', 'Guru Pengampu']],
                 body: bodyData,
                 theme: 'striped',
                 headStyles: { fillColor: [16, 124, 65], halign: 'center' },
                 columnStyles: {
                     0: { halign: 'center', cellWidth: 12 },
                     1: { fontStyle: 'bold' },
-                    2: { halign: 'center', cellWidth: 20 },
+                    2: { halign: 'center', cellWidth: 18 },
                     5: { halign: 'center' },
                     6: { halign: 'center', fontStyle: 'bold' },
                     7: { halign: 'center' },
-                    8: { fontStyle: 'normal' }
+                    8: { halign: 'center' },
+                    9: { fontStyle: 'normal' }
                 },
-                styles: { fontSize: 10, cellPadding: 3 }
+                styles: { fontSize: 9, cellPadding: 2.5 }
             });
 
             doc.save("Rekap_Hafalan_SMP_HQ_Ringinagung.pdf");
